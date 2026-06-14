@@ -1,0 +1,2 @@
+# Clipicity
+Cliping Made Simple
