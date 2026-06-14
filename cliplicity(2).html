@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cliplicity — Footage in. Ads out.</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --paper: #F7F5F0;
+    --ink: #1C1B1A;
+    --orange: #FF5A1F;
+    --slate: #6B6963;
+    --line: #DEDAD2;
+    --mint: #3DDC97;
+
+    --font-display: 'Bricolage Grotesque', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  a { color: inherit; }
+
+  :focus-visible {
+    outline: 2px solid var(--orange);
+    outline-offset: 3px;
+  }
+
+  /* ---------- Scrub bar ---------- */
+  .scrub-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--line);
+    z-index: 100;
+  }
+  .scrub-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--orange);
+    transition: width 0.1s linear;
+  }
+
+  /* ---------- Nav ---------- */
+  .nav {
+    position: sticky;
+    top: 3px;
+    z-index: 90;
+    background: rgba(247, 245, 240, 0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+  .wordmark {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    line-height: 0;
+  }
+  .nav-logo-img {
+    height: 40px;
+    width: 40px;
+    display: block;
+    border-radius: 6px;
+  }
+  .nav-cta {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--ink);
+    padding: 8px 16px;
+    border-radius: 100px;
+    transition: background 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+  }
+  .nav-cta:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  /* ---------- Eyebrow ---------- */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--slate);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--orange);
+    flex-shrink: 0;
+  }
+  .eyebrow-light { color: rgba(247,245,240,0.6); }
+  .eyebrow-light .dot { background: var(--mint); }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding: 72px 0 96px;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 64px;
+    align-items: center;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2.6rem, 6.5vw, 4.6rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 22px;
+  }
+  .lead {
+    font-size: 1.08rem;
+    color: var(--slate);
+    max-width: 42ch;
+    margin-bottom: 32px;
+  }
+  .lead-light {
+    font-size: 1.08rem;
+    color: rgba(247,245,240,0.75);
+    max-width: 42ch;
+    margin: 0 auto 32px;
+  }
+
+  /* ---------- Signup form ---------- */
+  .signup {
+    display: flex;
+    gap: 10px;
+    max-width: 460px;
+  }
+  .signup input {
+    flex: 1;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    padding: 14px 16px;
+    border: 1px solid var(--ink);
+    border-radius: 100px;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .signup input::placeholder { color: var(--slate); }
+  .signup button {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.85rem;
+    background: var(--orange);
+    color: var(--ink);
+    border: 1px solid var(--orange);
+    border-radius: 100px;
+    padding: 14px 22px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.1s ease;
+  }
+  .signup button:hover { transform: translateY(-1px); }
+  .signup button:active { transform: translateY(0); }
+
+  .signup-dark input {
+    background: rgba(247,245,240,0.06);
+    border: 1px solid rgba(247,245,240,0.25);
+    color: var(--paper);
+  }
+  .signup-dark input::placeholder { color: rgba(247,245,240,0.45); }
+
+  .form-note {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--slate);
+    margin-top: 12px;
+  }
+  .cta .form-note { color: rgba(247,245,240,0.5); text-align: center; }
+  .hero .signup, .hero .form-note { margin-left: 0; }
+
+  /* ---------- Hero visual: timeline diagram ---------- */
+  .hero-visual {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .clip-raw {
+    height: 64px;
+    border-radius: 8px;
+    background-image: repeating-linear-gradient(
+      45deg,
+      var(--slate) 0px, var(--slate) 12px,
+      #82807a 12px, #82807a 24px
+    );
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+  }
+  .clip-label {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--paper);
+    background: rgba(28,27,26,0.35);
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+  }
+  .timeline-arrow {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    color: var(--orange);
+    text-align: center;
+    line-height: 1;
+  }
+  .output-clips {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 16px;
+  }
+  .clip-out {
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8px;
+    gap: 4px;
+  }
+  .clip-out span {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .clip-out small {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+  }
+  .clip-vertical {
+    aspect-ratio: 9 / 16;
+    width: 78px;
+    background: var(--orange);
+    color: var(--ink);
+  }
+  .clip-square {
+    aspect-ratio: 1 / 1;
+    width: 100px;
+    background: var(--mint);
+    color: var(--ink);
+  }
+  .clip-wide {
+    aspect-ratio: 16 / 9;
+    width: 150px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .clip-wide small { color: rgba(247,245,240,0.6); }
+  .clip-vertical small, .clip-square small { color: rgba(28,27,26,0.6); }
+
+  /* ---------- Sections ---------- */
+  section { padding: 88px 0; }
+  .how { border-top: 1px solid var(--line); }
+  .formats { border-top: 1px solid var(--line); }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.9rem, 4.2vw, 2.8rem);
+    letter-spacing: -0.01em;
+    max-width: 18ch;
+    margin-bottom: 12px;
+  }
+
+  /* ---------- How it works ---------- */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    margin-top: 56px;
+    position: relative;
+  }
+  .steps::before {
+    content: '';
+    position: absolute;
+    top: 7px; left: 0; right: 0;
+    height: 1px;
+    background: var(--line);
+  }
+  .step {
+    position: relative;
+    padding-top: 32px;
+  }
+  .step::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 2px solid var(--orange);
+  }
+  .step-time {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--orange);
+    margin-bottom: 10px;
+  }
+  .step h3 {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .step p { color: var(--slate); font-size: 0.96rem; }
+
+  /* ---------- Formats ---------- */
+  .formats h2 { margin: 0 auto 12px; }
+  .formats-header { text-align: center; max-width: 600px; margin: 0 auto; }
+  .formats-header .lead { margin: 0 auto; text-align: center; }
+  .formats-header .eyebrow { justify-content: center; }
+
+  .format-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin-top: 56px;
+    align-items: end;
+  }
+  .format-card { text-align: center; }
+  .frame {
+    background: var(--line);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(28,27,26,0.04), rgba(28,27,26,0.12));
+  }
+  .play {
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--ink);
+    z-index: 1;
+    opacity: 0.4;
+  }
+  .frame-916 { aspect-ratio: 9/16; width: 130px; }
+  .frame-11  { aspect-ratio: 1/1;  width: 170px; }
+  .frame-169 { aspect-ratio: 16/9; width: 230px; }
+  .format-card h4 {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+  .format-card p {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--slate);
+  }
+
+  /* ---------- CTA ---------- */
+  .cta {
+    background: var(--ink);
+    color: var(--paper);
+    text-align: center;
+  }
+  .cta .eyebrow { justify-content: center; }
+  .cta h2 { color: var(--paper); margin: 0 auto 12px; }
+  .cta .signup { margin: 0 auto; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 40px 0;
+  }
+  .footer-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .footer-grid p { font-size: 0.9rem; color: var(--slate); }
+  .fine-print {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--slate);
+    width: 100%;
+    margin-top: 8px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+
+  /* ---------- Reveal animation ---------- */
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    html { scroll-behavior: auto; }
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 860px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+    .steps { grid-template-columns: 1fr; gap: 32px; }
+    .steps::before { top: 0; bottom: 0; left: 7px; right: auto; width: 1px; height: auto; }
+    .step { padding-top: 0; padding-left: 32px; }
+    .step::before { top: 2px; left: 0; }
+    .format-grid { grid-template-columns: 1fr; gap: 40px; }
+    .signup { flex-direction: column; }
+    .signup button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="scrub-bar" aria-hidden="true"><div class="scrub-fill" id="scrubFill"></div></div>
+
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="#" class="nav-logo"><img src="favicon.png" alt="Cliplicity" class="nav-logo-img"></a>
+      <a href="#waitlist" class="nav-cta">Get early access</a>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="dot"></span>00:00:00 — RAW FOOTAGE</p>
+        <h1>Footage in.<br>Ads out.</h1>
+        <p class="lead">
+          Upload whatever you've got — product demos, event clips, stuff you filmed on your phone.
+          Cliplicity finds the moments worth watching and cuts them into ads sized for every feed.
+        </p>
+        <form class="signup" id="heroForm" action="https://formspree.io/f/mojzydjk" method="POST">
+          <label for="heroEmail" class="visually-hidden" style="position:absolute;left:-9999px;">Email address</label>
+          <input type="email" id="heroEmail" name="email" placeholder="you@yourbusiness.com" required>
+          <button type="submit">Get early access</button>
+        </form>
+        <p class="form-note" id="heroNote">No spam. Just a note when we open the doors.</p>
+      </div>
+
+      <div class="hero-visual reveal" aria-hidden="true">
+        <div class="clip-raw">
+          <span class="clip-label">raw_footage.mp4 — 04:12</span>
+        </div>
+        <div class="timeline-arrow">↓</div>
+        <div class="output-clips">
+          <div class="clip-out clip-vertical">
+            <span>9:16</span>
+            <small>REELS · TIKTOK · SHORTS</small>
+          </div>
+          <div class="clip-out clip-square">
+            <span>1:1</span>
+            <small>FEED POSTS</small>
+          </div>
+          <div class="clip-out clip-wide">
+            <span>16:9</span>
+            <small>YOUTUBE · ADS</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how" id="how">
+    <div class="container">
+      <p class="eyebrow"><span class="dot"></span>00:00:08 — HOW IT WORKS</p>
+      <h2>Three cuts. Zero editing software.</h2>
+      <div class="steps">
+        <div class="step reveal">
+          <p class="step-time">00:00</p>
+          <h3>Drop in your footage</h3>
+          <p>Phone clips, product demos, event recordings — any length, any quality. No prep needed on your end.</p>
+        </div>
+        <div class="step reveal">
+          <p class="step-time">00:08</p>
+          <h3>Cliplicity finds the good parts</h3>
+          <p>It scans for your product, your best moments, and the bits people actually stop scrolling for.</p>
+        </div>
+        <div class="step reveal">
+          <p class="step-time">00:16</p>
+          <h3>Get clips ready to post</h3>
+          <p>Captioned, branded, and sized for Reels, TikTok, Shorts, and ad placements — ready to publish today.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="formats" id="formats">
+    <div class="container">
+      <div class="formats-header reveal">
+        <p class="eyebrow"><span class="dot"></span>00:00:16 — OUTPUT</p>
+        <h2>One upload. Every feed.</h2>
+        <p class="lead">No more re-shooting the same clip three times for three platforms. Cliplicity reframes and recuts automatically.</p>
+      </div>
+      <div class="format-grid">
+        <div class="format-card reveal">
+          <div class="frame frame-916"><span class="play">▶</span></div>
+          <h4>9:16</h4>
+          <p>REELS · TIKTOK · SHORTS</p>
+        </div>
+        <div class="format-card reveal">
+          <div class="frame frame-11"><span class="play">▶</span></div>
+          <h4>1:1</h4>
+          <p>FEED POSTS</p>
+        </div>
+        <div class="format-card reveal">
+          <div class="frame frame-169"><span class="play">▶</span></div>
+          <h4>16:9</h4>
+          <p>YOUTUBE · DISPLAY ADS</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta" id="waitlist">
+    <div class="container">
+      <p class="eyebrow eyebrow-light"><span class="dot"></span>00:00:24 — JOIN US</p>
+      <h2>Be first to cut.</h2>
+      <p class="lead-light">
+        We're building Cliplicity right now. Join the waitlist and we'll let you know
+        the moment it's ready for your footage — no commitment, no spam.
+      </p>
+      <form class="signup signup-dark" id="ctaForm" action="https://formspree.io/f/mojzydjk" method="POST">
+        <label for="ctaEmail" class="visually-hidden" style="position:absolute;left:-9999px;">Email address</label>
+        <input type="email" id="ctaEmail" name="email" placeholder="you@yourbusiness.com" required>
+        <button type="submit">Join the waitlist</button>
+      </form>
+      <p class="form-note" id="ctaNote">No spam. Just a note when we open the doors.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container footer-grid">
+      <div class="wordmark">Cliplicity</div>
+      <p>Footage in, ads out.</p>
+      <p class="fine-print">Cliplicity is currently in development. © 2026.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll progress bar
+    const scrubFill = document.getElementById('scrubFill');
+    function updateScrub() {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      scrubFill.style.width = pct + '%';
+    }
+    window.addEventListener('scroll', updateScrub);
+    updateScrub();
+
+    // Reveal on scroll
+    const revealEls = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.15 });
+      revealEls.forEach(el => observer.observe(el));
+    } else {
+      revealEls.forEach(el => el.classList.add('is-visible'));
+    }
+
+    // Form handlers — submit to Formspree via fetch, no page reload
+    function handleSignup(formId, noteId) {
+      const form = document.getElementById(formId);
+      const note = document.getElementById(noteId);
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = form.querySelector('input');
+        const button = form.querySelector('button');
+        if (!input.value) return;
+
+        button.disabled = true;
+        const originalText = button.textContent;
+        button.textContent = 'Sending…';
+
+        fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'Accept': 'application/json' }
+        })
+        .then(response => {
+          if (response.ok) {
+            note.textContent = "You're on the list — we'll be in touch.";
+            input.value = '';
+            input.disabled = true;
+            button.style.opacity = '0.6';
+            button.style.cursor = 'default';
+          } else {
+            note.textContent = "Something went wrong — please try again.";
+            button.disabled = false;
+            button.textContent = originalText;
+          }
+        })
+        .catch(() => {
+          note.textContent = "Something went wrong — please try again.";
+          button.disabled = false;
+          button.textContent = originalText;
+        });
+      });
+    }
+    handleSignup('heroForm', 'heroNote');
+    handleSignup('ctaForm', 'ctaNote');
+  </script>
+
+</body>
+</html>
