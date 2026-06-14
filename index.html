@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cliplicity — Footage in. Ads out.</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
@@ -471,9 +473,9 @@
           Upload whatever you've got — product demos, event clips, stuff you filmed on your phone.
           Cliplicity finds the moments worth watching and cuts them into ads sized for every feed.
         </p>
-        <form class="signup" id="heroForm">
+        <form class="signup" id="heroForm" action="https://formspree.io/f/mojzydjk" method="POST">
           <label for="heroEmail" class="visually-hidden" style="position:absolute;left:-9999px;">Email address</label>
-          <input type="email" id="heroEmail" placeholder="you@yourbusiness.com" required>
+          <input type="email" id="heroEmail" name="email" placeholder="you@yourbusiness.com" required>
           <button type="submit">Get early access</button>
         </form>
         <p class="form-note" id="heroNote">No spam. Just a note when we open the doors.</p>
@@ -561,9 +563,9 @@
         We're building Cliplicity right now. Join the waitlist and we'll let you know
         the moment it's ready for your footage — no commitment, no spam.
       </p>
-      <form class="signup signup-dark" id="ctaForm">
+      <form class="signup signup-dark" id="ctaForm" action="https://formspree.io/f/mojzydjk" method="POST">
         <label for="ctaEmail" class="visually-hidden" style="position:absolute;left:-9999px;">Email address</label>
-        <input type="email" id="ctaEmail" placeholder="you@yourbusiness.com" required>
+        <input type="email" id="ctaEmail" name="email" placeholder="you@yourbusiness.com" required>
         <button type="submit">Join the waitlist</button>
       </form>
       <p class="form-note" id="ctaNote">No spam. Just a note when we open the doors.</p>
@@ -606,7 +608,7 @@
       revealEls.forEach(el => el.classList.add('is-visible'));
     }
 
-    // Form handlers (no backend yet — just confirm visually)
+    // Form handlers — submit to Formspree via fetch, no page reload
     function handleSignup(formId, noteId) {
       const form = document.getElementById(formId);
       const note = document.getElementById(noteId);
@@ -615,12 +617,34 @@
         const input = form.querySelector('input');
         const button = form.querySelector('button');
         if (!input.value) return;
-        note.textContent = "You're on the list — we'll be in touch.";
-        input.value = '';
-        input.disabled = true;
+
         button.disabled = true;
-        button.style.opacity = '0.6';
-        button.style.cursor = 'default';
+        const originalText = button.textContent;
+        button.textContent = 'Sending…';
+
+        fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'Accept': 'application/json' }
+        })
+        .then(response => {
+          if (response.ok) {
+            note.textContent = "You're on the list — we'll be in touch.";
+            input.value = '';
+            input.disabled = true;
+            button.style.opacity = '0.6';
+            button.style.cursor = 'default';
+          } else {
+            note.textContent = "Something went wrong — please try again.";
+            button.disabled = false;
+            button.textContent = originalText;
+          }
+        })
+        .catch(() => {
+          note.textContent = "Something went wrong — please try again.";
+          button.disabled = false;
+          button.textContent = originalText;
+        });
       });
     }
     handleSignup('heroForm', 'heroNote');
